@@ -66,6 +66,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ steps.fetch_account_id.outputs.account_id }}
 
       - name: Migrate state from KV (if needed)
+        if: false
         run: |
           python3 deploy/migrate_kv.py
         env:
