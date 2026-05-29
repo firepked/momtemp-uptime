@@ -1,134 +1,500 @@
-// This is a simplified example config file for quickstart
-// Some not frequently used features are omitted/commented out here
-// For a full-featured example, please refer to `uptime.config.full.ts`
+// This is the production config for Mind Over Matter Meals
+// Monitors ALL services 24/7 from Cloudflare edge
 
-// Don't edit this line
 import { MaintenanceConfig, PageConfig, WorkerConfig } from './types/config'
 
 const pageConfig: PageConfig = {
-  // Title for your status page
-  title: "lyc8503's Status Page",
-  // Links shown at the header of your status page, could set `highlight` to `true`
+  title: "Mind Over Matter — Status",
   links: [
-    { link: 'https://github.com/lyc8503', label: 'GitHub' },
-    { link: 'https://blog.lyc8503.net/', label: 'Blog' },
-    { link: 'mailto:me@lyc8503.net', label: 'Email Me', highlight: true },
+    { link: 'https://www.mindovermattermeals.com', label: 'Website' },
+    { link: 'https://github.com/nickbryanorg777', label: 'GitHub' },
+    { link: 'mailto:mom@mindovermattermeals.com', label: 'Contact', highlight: true },
   ],
 }
 
 const workerConfig: WorkerConfig = {
-  // Define all your monitors here
   monitors: [
-    // Example HTTP Monitor
+    // ═══════════════════════════════════════════
+    // FRONTEND
+    // ═══════════════════════════════════════════
     {
-      // `id` should be unique, history will be kept if the `id` remains constant
-      id: 'foo_monitor',
-      // `name` is used at status page and callback message
-      name: 'My API Monitor',
-      // `method` should be a valid HTTP Method
+      id: 'website',
+      name: 'Website (Production)',
       method: 'GET',
-      // `target` is a valid URL
-      target: 'https://example.com',
-      // [OPTIONAL] `tooltip` is ONLY used at status page to show a tooltip
-      tooltip: 'This is a tooltip for this monitor',
-      // [OPTIONAL] `statusPageLink` is ONLY used for clickable link at status page
-      statusPageLink: 'https://example.com',
-      // [OPTIONAL] `expectedCodes` is an array of acceptable HTTP response codes, if not specified, default to 2xx
+      target: 'https://www.mindovermattermeals.com',
       expectedCodes: [200],
-      // [OPTIONAL] `timeout` in millisecond, if not specified, default to 10000
-      timeout: 10000,
-      // [OPTIONAL] headers to be sent
-      headers: {
-        'User-Agent': 'Uptimeflare',
-        Authorization: 'Bearer YOUR_TOKEN_HERE',
-      },
-      // [OPTIONAL] body to be sent (require POST/PUT/PATCH method)
-      // body: 'Hello, world!',
-      // [OPTIONAL] if specified, the response must contains the keyword to be considered as operational.
-      // responseKeyword: 'success',
-      // [OPTIONAL] if specified, the response must NOT contains the keyword to be considered as operational.
-      // responseForbiddenKeyword: 'bad gateway',
-      // [OPTIONAL] if specified, will call the check proxy to check the monitor, mainly for geo-specific checks
-      // refer to docs https://github.com/lyc8503/UptimeFlare/wiki/Check-proxy-setup before setting this value
-      // currently supports `worker://`, `globalping://` and `http(s)://` proxies
-      // checkProxy: 'worker://weur',
-      // [OPTIONAL] if true, the check will fallback to local if the specified proxy is down
-      // checkProxyFallback: true,
+      timeout: 15000,
+      tooltip: 'Frontend hosted via Lovable Cloud behind Cloudflare',
+      statusPageLink: 'https://www.mindovermattermeals.com',
     },
-    // Example TCP Monitor
     {
-      id: 'test_tcp_monitor',
-      name: 'Example TCP Monitor',
-      // `method` should be `TCP_PING` for tcp monitors
-      method: 'TCP_PING',
-      // `target` should be `host:port` for tcp monitors
-      target: '1.2.3.4:22',
-      tooltip: 'My production server SSH',
-      statusPageLink: 'https://example.com',
-      timeout: 5000,
+      id: 'website-home',
+      name: 'Website (Home)',
+      method: 'GET',
+      target: 'https://mindovermattermeals.com',
+      expectedCodes: [200, 301, 308],
+      timeout: 15000,
+    },
+
+    // ═══════════════════════════════════════════
+    // SUPABASE / BACKEND INFRASTRUCTURE
+    // ═══════════════════════════════════════════
+    {
+      id: 'supabase-rest',
+      name: 'Supabase REST API',
+      method: 'GET',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/rest/v1/',
+      expectedCodes: [200, 401], // 401 means reachable (needs auth)
+      timeout: 15000,
+      tooltip: 'Supabase PostgREST API gateway',
+    },
+    {
+      id: 'supabase-auth',
+      name: 'Supabase Auth',
+      method: 'GET',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/auth/v1/',
+      expectedCodes: [200, 404],
+      timeout: 15000,
+    },
+    {
+      id: 'supabase-storage',
+      name: 'Supabase Storage',
+      method: 'GET',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/storage/v1/',
+      expectedCodes: [200, 401],
+      timeout: 15000,
+    },
+
+    // ═══════════════════════════════════════════
+    // ERROR TRACKING
+    // ═══════════════════════════════════════════
+    {
+      id: 'bugsink',
+      name: 'Bugsink (Error Tracking)',
+      method: 'GET',
+      target: 'https://bugsink.w0.toprod.xyz',
+      expectedCodes: [200, 302],
+      timeout: 15000,
+    },
+
+    // ═══════════════════════════════════════════
+    // EDGE FUNCTIONS (All 47)
+    // ═══════════════════════════════════════════
+    // Critical order flow
+    {
+      id: 'fn-submit-order',
+      name: 'EF: submit-order',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/submit-order',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-create-checkout',
+      name: 'EF: create-checkout',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/create-checkout',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-stripe-webhook',
+      name: 'EF: stripe-webhook',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/stripe-webhook',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-verify-checkout',
+      name: 'EF: verify-checkout-status',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/verify-checkout-status',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-modify-paid-order',
+      name: 'EF: modify-paid-order',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/modify-paid-order',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+
+    // Auth & Email
+    {
+      id: 'fn-send-email',
+      name: 'EF: send-email',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/send-email',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-send-confirmation',
+      name: 'EF: send-confirmation',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/send-confirmation',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-auth-email-hook',
+      name: 'EF: auth-email-hook',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/auth-email-hook',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-send-scheduled-email',
+      name: 'EF: send-scheduled-email',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/send-scheduled-email',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    // Admin
+    {
+      id: 'fn-admin-orders',
+      name: 'EF: admin-orders',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/admin-orders',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-admin-audit',
+      name: 'EF: admin-audit',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/admin-audit',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-admin-failed-orders',
+      name: 'EF: admin-failed-orders',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/admin-failed-orders',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-admin-create-order',
+      name: 'EF: admin-create-order',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/admin-create-order',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-admin-tools',
+      name: 'EF: admin-tools',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/admin-tools',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-admin-setup',
+      name: 'EF: admin-setup',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/admin-setup',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-admin-pulse',
+      name: 'EF: admin-pulse',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/admin-pulse',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-admin-auth-errors',
+      name: 'EF: admin-auth-errors',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/admin-auth-errors',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-admin-transactional-email-jobs',
+      name: 'EF: admin-transactional-email-jobs',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/admin-transactional-email-jobs',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+
+    // Cron / Scheduled
+    {
+      id: 'fn-check-deadline',
+      name: 'EF: check-deadline',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/check-deadline',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-check-abandoned-carts',
+      name: 'EF: check-abandoned-carts',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/check-abandoned-carts',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-check-account-status',
+      name: 'EF: check-account-status',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/check-account-status',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-check-dependencies',
+      name: 'EF: check-dependencies',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/check-dependencies',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-cleanup-stale-orders',
+      name: 'EF: cleanup-stale-orders',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/cleanup-stale-orders',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-notify-menu-live',
+      name: 'EF: notify-menu-live',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/notify-menu-live',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-notify-last-day',
+      name: 'EF: notify-last-day',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/notify-last-day',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-send-abandoned-cart-email',
+      name: 'EF: send-abandoned-cart-email',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/send-abandoned-cart-email',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-process-transactional-email',
+      name: 'EF: process-transactional-email-jobs',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/process-transactional-email-jobs',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+
+    // Data / Import
+    {
+      id: 'fn-fetch-wc-products',
+      name: 'EF: fetch-wc-products',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/fetch-wc-products',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-import-customers',
+      name: 'EF: import-customers',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/import-customers',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-import-data',
+      name: 'EF: import-data',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/import-data',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-bulk-wc-stats',
+      name: 'EF: bulk-wc-stats',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/bulk-wc-stats',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-backfill-orphan-auth',
+      name: 'EF: backfill-orphan-auth-users',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/backfill-orphan-auth-users',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+
+    // Other
+    {
+      id: 'fn-webhook-dispatcher',
+      name: 'EF: webhook-dispatcher',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/webhook-dispatcher',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-contact-form',
+      name: 'EF: contact-form',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/contact-form',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-manage-email-preferences',
+      name: 'EF: manage-email-preferences',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/manage-email-preferences',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-purchase-gift-card',
+      name: 'EF: purchase-gift-card',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/purchase-gift-card',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-validate-gift-card',
+      name: 'EF: validate-gift-card',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/validate-gift-card',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-redeem-referral',
+      name: 'EF: redeem-referral',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/redeem-referral',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-track-auth-error',
+      name: 'EF: track-auth-error',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/track-auth-error',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-track-funnel-error',
+      name: 'EF: track-funnel-error',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/track-funnel-error',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-verify-site-password',
+      name: 'EF: verify-site-password',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/verify-site-password',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-auth-email-hook-backup',
+      name: 'EF: auth-email-hook (backup)',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/auth-email-hook',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-upload-meal-image',
+      name: 'EF: upload-meal-image',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/upload-meal-image',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-enhance-meal-image',
+      name: 'EF: enhance-meal-image',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/enhance-meal-image',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-migrate-base64-images',
+      name: 'EF: migrate-base64-images',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/migrate-base64-images',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-send-test-email',
+      name: 'EF: send-test-email',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/send-test-email',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
+    },
+    {
+      id: 'fn-stripe-identity-splits',
+      name: 'EF: stripe-identity-splits (via webhook)',
+      method: 'POST',
+      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/stripe-webhook',
+      expectedCodes: [200, 400, 401],
+      timeout: 10000,
     },
   ],
-  // [Optional] Notification settings
+
+  // ═══════════════════════════════════════════
+  // NOTIFICATIONS — Telegram
+  // ═══════════════════════════════════════════
   notification: {
-    // [Optional] Notification webhook settings, if not specified, no notification will be sent
-    // More info at Wiki: https://github.com/lyc8503/UptimeFlare/wiki/Setup-notification
     webhook: {
-      // [Required] webhook URL (example: Telegram Bot API)
-      url: 'https://api.telegram.org/bot123456:ABCDEF/sendMessage',
-      // [Optional] HTTP method, default to 'GET' for payloadType=param, 'POST' otherwise
-      // method: 'POST',
-      // [Optional] headers to be sent
-      // headers: {
-      //   foo: 'bar',
-      // },
-      // [Required] Specify how to encode the payload
-      // Should be one of 'param', 'json' or 'x-www-form-urlencoded'
-      // 'param': append url-encoded payload to URL search parameters
-      // 'json': POST json payload as body, set content-type header to 'application/json'
-      // 'x-www-form-urlencoded': POST url-encoded payload as body, set content-type header to 'x-www-form-urlencoded'
+      url: 'https://api.telegram.org/bot8430557934:AAFp_Uo_kMTu0_k7SPrQLAnqXPB1tnz4Nu4/sendMessage',
       payloadType: 'x-www-form-urlencoded',
-      // [Required] payload to be sent
-      // $MSG will be replaced with the human-readable notification message
       payload: {
-        chat_id: 12345678,
+        chat_id: 8567195008,
         text: '$MSG',
       },
-      // [Optional] timeout calling this webhook, in millisecond, default to 5000
       timeout: 10000,
     },
-    // [Optional] timezone used in notification messages, default to "Etc/GMT"
-    timeZone: 'Asia/Shanghai',
-    // [Optional] grace period in minutes before sending a notification
-    // notification will be sent only if the monitor is down for N continuous checks after the initial failure
-    // if not specified, notification will be sent immediately
-    gracePeriod: 5,
+    timeZone: 'America/New_York',
+    gracePeriod: 10,
   },
 }
 
-// You can define multiple maintenances here
-// During maintenance, an alert will be shown at status page
-// Also, related downtime notifications will be skipped (if any)
-// Of course, you can leave it empty if you don't need this feature
-
-// const maintenances: MaintenanceConfig[] = []
-
 const maintenances: MaintenanceConfig[] = [
-  {
-    // [Optional] Monitor IDs to be affected by this maintenance
-    monitors: ['foo_monitor', 'bar_monitor'],
-    // [Optional] default to "Scheduled Maintenance" if not specified
-    title: 'Test Maintenance',
-    // Description of the maintenance, will be shown at status page
-    body: 'This is a test maintenance, server software upgrade',
-    // Start time of the maintenance, in UNIX timestamp or ISO 8601 format
-    start: '2020-01-01T00:00:00+08:00',
-    // [Optional] end time of the maintenance, in UNIX timestamp or ISO 8601 format
-    // if not specified, the maintenance will be considered as on-going
-    end: '2050-01-01T00:00:00+08:00',
-    // [Optional] color of the maintenance alert at status page, default to "yellow"
-    color: 'blue',
-  },
+  // {
+  //   monitors: ['fn-import-data', 'fn-fetch-wc-products'],
+  //   title: 'Planned Data Import',
+  //   body: 'Scheduled WooCommerce data sync — services will be unavailable briefly.',
+  //   start: '2026-06-01T02:00:00-04:00',
+  //   end: '2026-06-01T04:00:00-04:00',
+  //   color: 'blue',
+  // },
 ]
 
-// Don't edit this line
 export { maintenances, pageConfig, workerConfig }
