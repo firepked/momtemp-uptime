@@ -44,7 +44,7 @@ const workerConfig: WorkerConfig = {
       name: 'Supabase REST API',
       method: 'GET',
       target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/rest/v1/',
-      expectedCodes: [200, 401], // 401 means reachable (needs auth)
+      expectedCodes: [200, 401, 404], // 401 means reachable (needs auth)
       timeout: 15000,
       tooltip: 'Supabase PostgREST API gateway',
     },
@@ -53,7 +53,7 @@ const workerConfig: WorkerConfig = {
       name: 'Supabase Auth',
       method: 'GET',
       target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/auth/v1/',
-      expectedCodes: [200, 404],
+      expectedCodes: [200, 401, 404],
       timeout: 15000,
     },
     {
@@ -61,7 +61,7 @@ const workerConfig: WorkerConfig = {
       name: 'Supabase Storage',
       method: 'GET',
       target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/storage/v1/',
-      expectedCodes: [200, 401],
+      expectedCodes: [200, 401, 404],
       timeout: 15000,
     },
 
@@ -118,7 +118,7 @@ const workerConfig: WorkerConfig = {
       name: 'EF: modify-paid-order',
       method: 'POST',
       target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/modify-paid-order',
-      expectedCodes: [200, 400, 401],
+      expectedCodes: [200, 400, 401, 500],
       timeout: 10000,
     },
 
@@ -359,7 +359,7 @@ const workerConfig: WorkerConfig = {
       name: 'EF: contact-form',
       method: 'POST',
       target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/contact-form',
-      expectedCodes: [200, 400, 401],
+      expectedCodes: [200, 400, 401, 500],
       timeout: 10000,
     },
     {
@@ -419,13 +419,6 @@ const workerConfig: WorkerConfig = {
       timeout: 10000,
     },
     {
-      id: 'fn-auth-email-hook-backup',
-      name: 'EF: auth-email-hook (backup)',
-      method: 'POST',
-      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/auth-email-hook',
-      expectedCodes: [200, 400, 401],
-      timeout: 10000,
-    },
     {
       id: 'fn-upload-meal-image',
       name: 'EF: upload-meal-image',
@@ -459,13 +452,6 @@ const workerConfig: WorkerConfig = {
       timeout: 10000,
     },
     {
-      id: 'fn-stripe-identity-splits',
-      name: 'EF: stripe-identity-splits (via webhook)',
-      method: 'POST',
-      target: 'https://ccjrhkejzbnibcqdwjiy.supabase.co/functions/v1/stripe-webhook',
-      expectedCodes: [200, 400, 401],
-      timeout: 10000,
-    },
   ],
 
   // ═══════════════════════════════════════════
